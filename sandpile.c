@@ -74,21 +74,30 @@ static void stabilize() {
   int changed = 0;
   do {
     changed = 0;
-    for (int i = 0; i < N; ++i) {
-      for (int j = 0; j < MAX(i, N - 1 - i) + 1; ++j) {
-        if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
-            (N / 2) * (N / 2) && (grid[i * N + j] >= 4)) {
+    #pragma omp parallel for reduction(||:changed)
+    for (int i_ = 0; i_ < N * N; ++i_) {
+        int i = (i_ / N);
+        int j = (i_ % N);
+        if (j < MAX(i, N - 1 - i) + 1 && (i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
+            (N / 2) * (N / 2) && (grid[(i * N) + j] >= 4)) {
           changed = 1; // topple it
           grid[(i * N) + j] -= 4;
-          if (i > 0)
+          if (i > 0) {
+            #pragma omp atomic
             grid[((i - 1) * N) + j]++;
-          if (j > 0)
+          }
+          if (j > 0) {
+            #pragma omp atomic
             grid[(i * N) + j - 1]++;
-          if (i < N - 1)
+          }
+          if (i < N - 1) {
+            #pragma omp atomic
             grid[(i + 1) * N + j]++;
-          if (j < N - 1)
+          }
+          if (j < N - 1) {
+            #pragma omp atomic
             grid[(i * N) + j + 1]++;
-        }
+          }
       }
     }
   } while (changed);
