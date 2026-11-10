@@ -19,7 +19,7 @@ static void die(const char *s) {
 }
 
 int N = 801;
-int **grid;
+int *grid;
 
 // you can also use this function to debug print your sandpile
 static void render(char *filename) {
@@ -30,7 +30,7 @@ static void render(char *filename) {
     die("malloc failed for PNG pixel buffer");
   for (int i = 0; i < N * N; ++i) {
       unsigned char r = 0, g = 0, b = 0;
-      switch (grid[i / N][i % N]) {
+      switch (grid[i]) {
       case 0: // obsidian
         r = 15;
         g = 15;
@@ -78,18 +78,18 @@ static void stabilize() {
       for (int j = 0; j < MAX(i, N - 1 - i) + 1; ++j) {
         if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
             (N / 2) * (N / 2)) {
-          if (grid[i][j] < 4)
+          if (grid[i * N + j] < 4)
             continue;
           changed = 1; // topple it
-          grid[i][j] -= 4;
+          grid[(i * N) + j] -= 4;
           if (i > 0)
-            grid[i - 1][j]++;
+            grid[((i - 1) * N) + j]++;
           if (j > 0)
-            grid[i][j - 1]++;
+            grid[(i * N) + j - 1]++;
           if (i < N - 1)
-            grid[i + 1][j]++;
+            grid[(i + 1) * N + j]++;
           if (j < N - 1)
-            grid[i][j + 1]++;
+            grid[(i * N) + j + 1]++;
         }
       }
     }
@@ -108,25 +108,17 @@ int main(int argc, char **argv) {
       parsed > INT32_MAX)
     die("grid size must be a positive int");
   N = (int)parsed;
-
-  grid = (int **)malloc(N * sizeof(int *));
-  for (int i = 0; i < N; ++i) {
-    grid[i] = (int *)malloc(N * sizeof(int));
-  }
-
+  grid = (int *)malloc(N * N * sizeof(int));
   for (int i = 0; i < N * N; ++i) {
-    grid[i / N][i % N] = 6;
+    grid[i] = 6;
   }
   stabilize();
   for (int i = 0; i < N * N; ++i) {
-    grid[i / N][i % N] = 6 - grid[i / N][i % N];
+    grid[i] = 6 - grid[i];
   }
   stabilize();
 
   render("identity.png");
-  for (int i = 0; i < N; ++i) {
-    free(grid[i]);
-  }
   free(grid);
   return EXIT_SUCCESS;
 }
