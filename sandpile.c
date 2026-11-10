@@ -77,9 +77,7 @@ static void stabilize() {
     for (int i = 0; i < N; ++i) {
       for (int j = 0; j < MAX(i, N - 1 - i) + 1; ++j) {
         if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
-            (N / 2) * (N / 2)) {
-          if (grid[i * N + j] < 4)
-            continue;
+            (N / 2) * (N / 2) && (grid[i * N + j] >= 4)) {
           changed = 1; // topple it
           grid[(i * N) + j] -= 4;
           if (i > 0)
