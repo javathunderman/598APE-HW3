@@ -28,10 +28,9 @@ static void render(char *filename) {
   int stride = N * chan;
   if (!pixels)
     die("malloc failed for PNG pixel buffer");
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
+  for (int i = 0; i < N * N; ++i) {
       unsigned char r = 0, g = 0, b = 0;
-      switch (grid[i][j]) {
+      switch (grid[i / N][i % N]) {
       case 0: // obsidian
         r = 15;
         g = 15;
@@ -58,12 +57,11 @@ static void render(char *filename) {
         b = 0;
       }
 
-      int pid = (i * N + j) * chan;
+      int pid = ((i / N) * N + (i % N)) * chan;
       pixels[pid] = r;
       pixels[pid + 1] = g;
       pixels[pid + 2] = b;
     }
-  }
   if (stbi_write_png(filename, N, N, chan, pixels, stride)) {
     printf("Successfully saved sandpile identity to: %s\n", filename);
   } else {
@@ -77,7 +75,7 @@ static void stabilize() {
   do {
     changed = 0;
     for (int i = 0; i < N; ++i) {
-      for (int j = 0; j <= MAX(i, N - 1 - i); ++j) {
+      for (int j = 0; j < MAX(i, N - 1 - i) + 1; ++j) {
         if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
             (N / 2) * (N / 2)) {
           if (grid[i][j] < 4)
@@ -98,20 +96,6 @@ static void stabilize() {
   } while (changed);
 }
 
-void find_identity() {
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      grid[i][j] = 6;
-    }
-  }
-  stabilize();
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      grid[i][j] = 6 - grid[i][j];
-    }
-  }
-  stabilize();
-}
 
 int main(int argc, char **argv) {
   if (argc < 2 || argc > 2) {
@@ -130,7 +114,14 @@ int main(int argc, char **argv) {
     grid[i] = (int *)malloc(N * sizeof(int));
   }
 
-  find_identity();
+  for (int i = 0; i < N * N; ++i) {
+    grid[i / N][i % N] = 6;
+  }
+  stabilize();
+  for (int i = 0; i < N * N; ++i) {
+    grid[i / N][i % N] = 6 - grid[i / N][i % N];
+  }
+  stabilize();
 
   render("identity.png");
   for (int i = 0; i < N; ++i) {
