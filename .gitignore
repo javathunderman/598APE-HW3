@@ -18,3 +18,5 @@
 
 # Compiled handouts
 /handout/*.pdf
+sandpile.exe
+perf-out/
