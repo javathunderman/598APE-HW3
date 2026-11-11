@@ -74,10 +74,9 @@ static void stabilize() {
   int changed = 0;
   do {
     changed = 0;
-    #pragma omp parallel for reduction(||:changed)
-    for (int i_ = 0; i_ < N * N; ++i_) {
-        int i = (i_ / N);
-        int j = (i_ % N);
+    #pragma omp parallel for reduction(||:changed) schedule(static)
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < N; ++j) {
         if (j < MAX(i, N - 1 - i) + 1 && (i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
             (N / 2) * (N / 2) && (grid[(i * N) + j] >= 4)) {
           changed = 1; // topple it
@@ -98,6 +97,7 @@ static void stabilize() {
             #pragma omp atomic
             grid[(i * N) + j + 1]++;
           }
+        }
       }
     }
   } while (changed);
